@@ -1,1 +1,5 @@
 venv/
+preprocessing/catboost_info/
+submission_*
+catboost_info/
+modelo_*
