@@ -5,7 +5,6 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import train_test_split
 
-# --- 1. DEFINIR FUNÇÕES DE LIMPEZA (A mesma lógica usada antes) ---
 def feature_engineering(df):
     df_feat = df.copy()
     
@@ -18,7 +17,7 @@ def feature_engineering(df):
     for c in cat_cols:
         if c in df_feat.columns: df_feat[c] = df_feat[c].fillna(df_feat[c].mode()[0] if not df_feat[c].mode().empty else 'Unknown')
 
-    # Engenharia
+    # Engenharia de features
     if 'Cabin' in df_feat.columns:
         df_feat[['Deck', 'Num', 'Side']] = df_feat['Cabin'].str.split('/', expand=True)
         df_feat['Num'] = pd.to_numeric(df_feat['Num'], errors='coerce').fillna(0)
@@ -35,7 +34,7 @@ def feature_engineering(df):
             
     return df_feat
 
-# --- 2. RECONSTRUIR O PREPROCESSOR (Usando o TREINO) ---
+# Preprocessor
 print("1. Recarregando dados de Treino para ajustar as colunas...")
 df_train = pd.read_csv(r'C:\Users\João Pedro\Documents\UFG\AMS\AS2\data\train_cleaned.csv') # Seu arquivo de treino original
 df_train_proc = feature_engineering(df_train)
@@ -49,7 +48,7 @@ X_train_raw = df_train_proc[features]
 num_cols = [c for c in X_train_raw.columns if X_train_raw[c].dtype in ['int64', 'float64', 'int32', 'float32']]
 cat_cols = [c for c in X_train_raw.columns if X_train_raw[c].dtype == 'object' or X_train_raw[c].dtype == 'bool']
 
-# CRIAR E TREINAR O PROCESSADOR
+# Ajustar o preprocessor
 preprocessor = ColumnTransformer(
     transformers=[
         ('num', StandardScaler(), num_cols),
@@ -59,7 +58,7 @@ preprocessor = ColumnTransformer(
 )
 preprocessor.fit(X_train_raw) # O Preprocessor aprende aqui (26 colunas)
 
-# --- 3. PROCESSAR O TESTE (Usando o cérebro do Treino) ---
+# Processar dados de teste
 print("2. Processando dados de Teste...")
 df_test = pd.read_csv(r'C:\Users\João Pedro\Documents\UFG\AMS\AS2\data\test_cleaned.csv')
 ids_kaggle = df_test['PassengerId'].copy()
@@ -70,13 +69,12 @@ df_test_proc = feature_engineering(df_test)
 # Garantir que o teste tenha apenas as colunas esperadas
 X_test_raw = df_test_proc[features] # Seleciona as mesmas colunas do treino
 
-# TRANSFORMAR (Atenção: Apenas transform, usando o preprocessor ajustado acima)
 X_test_final = preprocessor.transform(X_test_raw)
 
 print(f"Shape esperado pelo modelo: (N, 26)")
 print(f"Shape gerado agora: {X_test_final.shape}") 
 
-# --- 4. PREDIÇÃO E SUBMISSÃO ---
+# Predição
 if X_test_final.shape[1] == 26:
     print("3. Carregando modelo e prevendo...")
     model_path = r'C:\Users\João Pedro\Documents\UFG\AMS\AS2\model\melhor_modelo_spaceship.keras'
